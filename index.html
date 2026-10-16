@@ -31,7 +31,7 @@ button:hover{filter:brightness(.95)}
 #list .h{cursor:grab;color:var(--mu);padding:0 4px;font-style:normal;user-select:none}
 #list button{padding:4px 7px;font-size:11px}
 .stage{padding:20px 12px;overflow:auto;display:flex;justify-content:center;align-items:flex-start}
-#wrap{display:flex;flex-direction:column;gap:16px}#wrap.mp .lst{justify-content:flex-start;gap:.45em}.sheet{width:210mm;height:296.5mm;background:#fff;color:#111;padding:15mm 14mm 12mm;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.25);flex:none}
+#wrap{display:flex;flex-direction:column;gap:16px}.mini{flex:none;display:flex;justify-content:space-between;align-items:baseline;gap:1em;border-bottom:2px solid var(--ac);padding-bottom:2mm;margin-bottom:4mm;text-transform:uppercase;letter-spacing:.05em}.mini b{font-weight:inherit;font-size:max(18px,calc(var(--bs)*.4))}.mini span{font-size:max(12px,calc(var(--ms)*.6));color:var(--ac)}#wrap.mp .lst{justify-content:flex-start;gap:.45em}.sheet{width:210mm;height:296.5mm;background:#fff;color:#111;padding:15mm 14mm 12mm;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.25);flex:none}
 #sheet header{flex:none;text-align:center;border-bottom:3px solid var(--ac);padding-bottom:5mm;margin-bottom:5mm}
 #sBand{margin:0;font-weight:inherit;text-transform:uppercase;letter-spacing:.03em;line-height:1;font-size:var(--bs)}
 #sMeta{margin:3mm 0 0;font-size:var(--ms);letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:center;flex-wrap:wrap;gap:.8em}#sMeta span+span:before{content:"·";color:var(--ac);margin-right:.8em}
@@ -78,11 +78,11 @@ button:hover{filter:brightness(.95)}
     <span id="sizeVal" style="width:34px;text-align:right;color:var(--mu)"></span>
    </div>
    <div class="grid2">
-    <label class="ck"><input type="checkbox" id="auto"> Mida automàtica</label>
+    <label class="ck"><input type="checkbox" id="auto"> Ajustar a 1 pàgina</label>
     <label class="ck"><input type="checkbox" id="nums"> Numeració</label>
     <label class="ck"><input type="checkbox" id="upper"> Majúscules</label>
     <label class="ck"><input type="checkbox" id="center"> Centrat</label>
-    <label class="ck"><input type="checkbox" id="multi"> Multipàgina</label>
+    
    </div>
    <div class="row" style="margin-top:8px;gap:16px"><label class="ck">Color <input type="color" id="accent"></label><label class="ck">Color notes <input type="color" id="noteColor"></label></div>
   </section>
@@ -119,18 +119,18 @@ let drag=null;
 
 $('#font').innerHTML=Object.keys(FONTS).map(f=>`<option>${f}</option>`).join('');
 for(const k of ['band','date','venue','font','accent','noteColor']){const el=$('#'+k);el.value=S[k];el.oninput=()=>{S[k]=el.value;save();if(k==='font')loadFont();else drawSheet()}}
-for(const k of ['auto','nums','upper','center','multi']){const el=$('#'+k);el.checked=S[k];el.onchange=()=>{S[k]=el.checked;save();drawSheet()}}
+for(const k of ['auto','nums','upper','center']){const el=$('#'+k);el.checked=S[k];el.onchange=()=>{S[k]=el.checked;save();drawSheet()}}
 $('#bandSize').value=S.bandSize;$('#bandVal').textContent=S.bandSize;$('#bandSize').oninput=e=>{S.bandSize=+e.target.value;$('#bandVal').textContent=S.bandSize;save();drawSheet()};
 $('#metaSize').value=S.metaSize;$('#metaVal').textContent=S.metaSize;$('#metaSize').oninput=e=>{S.metaSize=+e.target.value;$('#metaVal').textContent=S.metaSize;save();drawSheet()};
-$('#size').value=S.size;$('#size').oninput=e=>{S.size=+e.target.value;save();drawSheet()};
+$('#size').value=S.size;$('#size').oninput=e=>{S.size=+e.target.value;S.auto=false;$('#auto').checked=false;save();drawSheet()};
 
 function fit(){
  const set=v=>sheet.style.setProperty('--fs',v+'px');
  let fs=S.size;
- document.querySelectorAll('.sheet.x').forEach(p=>p.remove());$('#wrap').classList.toggle('mp',!!S.multi);if(!S.multi){const ov=()=>sList.scrollHeight>sList.clientHeight+1;let lo=6,hi=S.auto?130:S.size;set(hi);if(ov()){for(let k=0;k<12;k++){const m=(lo+hi)/2;set(m);if(ov())hi=m;else lo=m}fs=lo}else fs=hi}
- set(fs);if(S.multi)paginate();
+ document.querySelectorAll('.sheet.x').forEach(p=>p.remove());$('#wrap').classList.toggle('mp',!S.auto);if(S.auto){const ov=()=>sList.scrollHeight>sList.clientHeight+1;let lo=6,hi=130;set(hi);if(ov()){for(let k=0;k<12;k++){const m=(lo+hi)/2;set(m);if(ov())hi=m;else lo=m}fs=lo}else fs=hi}
+ set(fs);if(!S.auto){paginate();if(!document.querySelector('.sheet.x'))$('#wrap').classList.remove('mp')}
  $('#sizeVal').textContent=Math.round(fs);
- const au=S.auto&&!S.multi;$('#size').disabled=au;$('#size').style.opacity=au?.4:1;
+ if(S.auto)$('#size').value=Math.round(fs);
 }
 function paginate(){
  const items=[...sList.children];let cur=sList;sList.innerHTML='';
@@ -139,6 +139,7 @@ function paginate(){
   if(cur.scrollHeight>cur.clientHeight+1&&cur.children.length>1){
    cur.removeChild(li);
    const p=document.createElement('div');p.className='sheet x';p.style.cssText=sheet.style.cssText;p.dataset.al=sheet.dataset.al;
+   const hd=document.createElement('header');hd.className='mini';const hb=document.createElement('b');hb.textContent=S.band;const hs=document.createElement('span');hs.textContent=[...$('#sMeta').children].map(x=>x.textContent).join(' · ');hd.append(hb,hs);p.appendChild(hd);
    const ol=document.createElement('ol');ol.className=sList.className;p.appendChild(ol);
    $('#wrap').appendChild(p);cur=ol;cur.appendChild(li);
   }
