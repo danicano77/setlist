@@ -40,7 +40,7 @@ button:hover{filter:brightness(.95)}
 .lst li{display:flex;gap:.35em;align-items:baseline;font-size:var(--fs);line-height:1.08;flex:none}
 .lst li b{color:var(--ac);font-weight:inherit;min-width:1.5em;text-align:right}
 .lst.up li:not(.note) span{text-transform:uppercase}.lst li.note{font-size:calc(var(--fs)*.7);color:var(--nc);line-height:1.15}
-.sheet[data-al=center] .lst li{justify-content:center}
+.sheet[data-al=left] .lst{align-self:center}.sheet[data-al=center] .lst li{justify-content:center}
 .sheet[data-al=center] .lst li b{min-width:0}
 @media (max-width:860px){.app{grid-template-columns:1fr}.panel{max-height:none;border-right:0;border-bottom:1px solid var(--bd)}}
 @page{size:A4;margin:0}
