@@ -31,17 +31,17 @@ button:hover{filter:brightness(.95)}
 #list .h{cursor:grab;color:var(--mu);padding:0 4px;font-style:normal;user-select:none}
 #list button{padding:4px 7px;font-size:11px}
 .stage{padding:20px 12px;overflow:auto;display:flex;justify-content:center;align-items:flex-start}
-#sheet{width:210mm;height:296.5mm;background:#fff;color:#111;padding:15mm 14mm 12mm;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.25);flex:none}
+#wrap{display:flex;flex-direction:column;gap:16px}#wrap.mp .lst{justify-content:flex-start;gap:.45em}.sheet{width:210mm;height:296.5mm;background:#fff;color:#111;padding:15mm 14mm 12mm;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.25);flex:none}
 #sheet header{flex:none;text-align:center;border-bottom:3px solid var(--ac);padding-bottom:5mm;margin-bottom:5mm}
 #sBand{margin:0;font-weight:inherit;text-transform:uppercase;letter-spacing:.03em;line-height:1;font-size:var(--bs)}
 #sMeta{margin:3mm 0 0;font-size:var(--ms);letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:center;flex-wrap:wrap;gap:.8em}#sMeta span+span:before{content:"·";color:var(--ac);margin-right:.8em}
 #sMeta:empty{display:none}
-#sList{list-style:none;margin:0;padding:0;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:space-evenly}
-#sList li{display:flex;gap:.35em;align-items:baseline;font-size:var(--fs);line-height:1.08;flex:none}
-#sList li b{color:var(--ac);font-weight:inherit;min-width:1.5em;text-align:right}
-#sList.up li:not(.note) span{text-transform:uppercase}#sList li.note{font-size:calc(var(--fs)*.7);color:var(--nc);line-height:1.15}
-#sheet[data-al=center] #sList li{justify-content:center}
-#sheet[data-al=center] #sList li b{min-width:0}
+.lst{list-style:none;margin:0;padding:0;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:space-evenly}
+.lst li{display:flex;gap:.35em;align-items:baseline;font-size:var(--fs);line-height:1.08;flex:none}
+.lst li b{color:var(--ac);font-weight:inherit;min-width:1.5em;text-align:right}
+.lst.up li:not(.note) span{text-transform:uppercase}.lst li.note{font-size:calc(var(--fs)*.7);color:var(--nc);line-height:1.15}
+.sheet[data-al=center] .lst li{justify-content:center}
+.sheet[data-al=center] .lst li b{min-width:0}
 @media (max-width:860px){.app{grid-template-columns:1fr}.panel{max-height:none;border-right:0;border-bottom:1px solid var(--bd)}}
 @page{size:A4;margin:0}
 @media print{
@@ -50,7 +50,7 @@ button:hover{filter:brightness(.95)}
  .app{display:block}
  .stage{padding:0;display:block;overflow:visible}
  #wrap{zoom:1!important}
- #sheet{box-shadow:none;margin:0}
+ .sheet{box-shadow:none;margin:0}.sheet+.sheet{break-before:page}#wrap{gap:0!important}
 }
 </style>
 </head>
@@ -82,6 +82,7 @@ button:hover{filter:brightness(.95)}
     <label class="ck"><input type="checkbox" id="nums"> Numeració</label>
     <label class="ck"><input type="checkbox" id="upper"> Majúscules</label>
     <label class="ck"><input type="checkbox" id="center"> Centrat</label>
+    <label class="ck"><input type="checkbox" id="multi"> Multipàgina</label>
    </div>
    <div class="row" style="margin-top:8px;gap:16px"><label class="ck">Color <input type="color" id="accent"></label><label class="ck">Color notes <input type="color" id="noteColor"></label></div>
   </section>
@@ -98,9 +99,9 @@ button:hover{filter:brightness(.95)}
  </aside>
  <main class="stage" id="stage">
   <div id="wrap">
-   <div id="sheet">
+   <div id="sheet" class="sheet">
     <header><h1 id="sBand"></h1><p id="sMeta"></p></header>
-    <ol id="sList"></ol>
+    <ol id="sList" class="lst"></ol>
    </div>
   </div>
  </main>
@@ -108,7 +109,7 @@ button:hover{filter:brightness(.95)}
 <script>
 const $=s=>document.querySelector(s);
 const FONTS={'Bebas Neue':400,'Anton':400,'Oswald':700,'Archivo Black':400,'Montserrat':800,'Playfair Display':800,'Permanent Marker':400,'Rock Salt':400,'Special Elite':400};
-const DEF={band:'NOM DE LA BANDA',date:'',venue:'',songs:['Obertura','Segona cançó','La lenta','El gran èxit','Bis final'],font:'Bebas Neue',size:64,bandSize:96,metaSize:36,noteColor:'#666666',auto:true,nums:true,upper:true,center:false,accent:'#e11d48'};
+const DEF={band:'NOM DE LA BANDA',date:'',venue:'',songs:['Obertura','Segona cançó','La lenta','El gran èxit','Bis final'],font:'Bebas Neue',size:64,bandSize:96,metaSize:36,noteColor:'#666666',multi:false,auto:true,nums:true,upper:true,center:false,accent:'#e11d48'};
 let S;
 try{S={...DEF,...JSON.parse(localStorage.getItem('setlist')||'{}')}}catch(e){S={...DEF}}
 S.songs=S.songs.map(x=>typeof x==='string'?{t:x,n:false}:x);
@@ -118,7 +119,7 @@ let drag=null;
 
 $('#font').innerHTML=Object.keys(FONTS).map(f=>`<option>${f}</option>`).join('');
 for(const k of ['band','date','venue','font','accent','noteColor']){const el=$('#'+k);el.value=S[k];el.oninput=()=>{S[k]=el.value;save();if(k==='font')loadFont();else drawSheet()}}
-for(const k of ['auto','nums','upper','center']){const el=$('#'+k);el.checked=S[k];el.onchange=()=>{S[k]=el.checked;save();drawSheet()}}
+for(const k of ['auto','nums','upper','center','multi']){const el=$('#'+k);el.checked=S[k];el.onchange=()=>{S[k]=el.checked;save();drawSheet()}}
 $('#bandSize').value=S.bandSize;$('#bandVal').textContent=S.bandSize;$('#bandSize').oninput=e=>{S.bandSize=+e.target.value;$('#bandVal').textContent=S.bandSize;save();drawSheet()};
 $('#metaSize').value=S.metaSize;$('#metaVal').textContent=S.metaSize;$('#metaSize').oninput=e=>{S.metaSize=+e.target.value;$('#metaVal').textContent=S.metaSize;save();drawSheet()};
 $('#size').value=S.size;$('#size').oninput=e=>{S.size=+e.target.value;save();drawSheet()};
@@ -126,10 +127,22 @@ $('#size').value=S.size;$('#size').oninput=e=>{S.size=+e.target.value;save();dra
 function fit(){
  const set=v=>sheet.style.setProperty('--fs',v+'px');
  let fs=S.size;
- if(S.auto){let lo=16,hi=130;for(let i=0;i<10;i++){const m=(lo+hi)/2;set(m);if(sList.scrollHeight>sList.clientHeight+1)hi=m;else lo=m}fs=lo}
- set(fs);
+ document.querySelectorAll('.sheet.x').forEach(p=>p.remove());$('#wrap').classList.toggle('mp',!!S.multi);if(!S.multi){const ov=()=>sList.scrollHeight>sList.clientHeight+1;let lo=6,hi=S.auto?130:S.size;set(hi);if(ov()){for(let k=0;k<12;k++){const m=(lo+hi)/2;set(m);if(ov())hi=m;else lo=m}fs=lo}else fs=hi}
+ set(fs);if(S.multi)paginate();
  $('#sizeVal').textContent=Math.round(fs);
- $('#size').disabled=S.auto;$('#size').style.opacity=S.auto?.4:1;
+ const au=S.auto&&!S.multi;$('#size').disabled=au;$('#size').style.opacity=au?.4:1;
+}
+function paginate(){
+ const items=[...sList.children];let cur=sList;sList.innerHTML='';
+ items.forEach(li=>{
+  cur.appendChild(li);
+  if(cur.scrollHeight>cur.clientHeight+1&&cur.children.length>1){
+   cur.removeChild(li);
+   const p=document.createElement('div');p.className='sheet x';p.style.cssText=sheet.style.cssText;p.dataset.al=sheet.dataset.al;
+   const ol=document.createElement('ol');ol.className=sList.className;p.appendChild(ol);
+   $('#wrap').appendChild(p);cur=ol;cur.appendChild(li);
+  }
+ });
 }
 function drawSheet(){
  sheet.style.setProperty('--ac',S.accent);sheet.style.setProperty('--bs',S.bandSize+'px');sheet.style.setProperty('--ms',S.metaSize+'px');sheet.style.setProperty('--nc',S.noteColor);
