@@ -152,7 +152,7 @@ function drawSheet(){
  $('#sBand').textContent=S.band||'\u00a0';
  const d=S.date?S.date.split('-').reverse().join('/'):'';
  $('#sMeta').replaceChildren(...[d,S.venue].filter(Boolean).map(t=>{const s=document.createElement('span');s.textContent=t;return s}));
- sList.className=S.upper?'up':'';
+ sList.className='lst'+(S.upper?' up':'');
  sList.innerHTML='';let cnt=0;
  S.songs.forEach((t,i)=>{
   const li=document.createElement('li');
