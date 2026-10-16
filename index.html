@@ -58,7 +58,7 @@ button:hover{filter:brightness(.95)}
 <div class="app">
  <aside class="panel">
   <div class="row">
-   <button class="pr" id="print">🖨 Imprimir / Exportar PDF</button>
+   <button class="pr" id="print">🖨 Imprimir / Exportar PDF</button></div><div class="row"><button id="saveBtn" style="flex:1">💾 Desa setlist</button><button id="loadBtn" style="flex:1">📂 Carrega setlist</button><input type="file" id="file" accept=".json,application/json" hidden>
   </div>
   <section>
    <h2>Concert</h2>
@@ -204,6 +204,30 @@ addEl.onkeydown=e=>{if(e.key==='Enter')addSongs(e.shiftKey)};
 addEl.onpaste=()=>setTimeout(()=>{if(/\n/.test(addEl.value))addSongs()},0);
 $('#addBtn').onclick=()=>addSongs();$('#noteBtn').onclick=()=>addSongs(true);
 $('#clear').onclick=()=>{if(S.songs.length&&confirm('Esborrar totes les cançons?')){S.songs=[];upd()}};
+function syncUI(){
+ for(const k of ['band','date','venue','font','accent','noteColor'])$('#'+k).value=S[k];
+ for(const k of ['auto','nums','upper','center'])$('#'+k).checked=S[k];
+ $('#size').value=S.size;
+ $('#bandSize').value=S.bandSize;$('#bandVal').textContent=S.bandSize;
+ $('#metaSize').value=S.metaSize;$('#metaVal').textContent=S.metaSize;
+}
+$('#saveBtn').onclick=async()=>{
+ const data=JSON.stringify({app:'setlist',...S},null,1);
+ const name=((S.band||'setlist').replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'').toLowerCase()||'setlist')+'-setlist.json';
+ try{const dl=await claude.use('downloads');if(!dl)throw 0;await dl.save({filename:name,data})}
+ catch(e){if(e&&e.code==='declined')return;try{await navigator.clipboard.writeText(data);alert('No es pot desar el fitxer aquí. He copiat el JSON al porta-retalls.')}catch(_){prompt('Copia aquest JSON:',data)}}
+};
+$('#loadBtn').onclick=()=>$('#file').click();
+$('#file').onchange=async e=>{
+ const f=e.target.files[0];e.target.value='';if(!f)return;
+ try{
+  const o=JSON.parse(await f.text());if(!o||!Array.isArray(o.songs))throw 0;
+  S={...DEF,...o};delete S.app;
+  S.songs=S.songs.map(x=>typeof x==='string'?{t:x,n:false}:{t:String(x.t??''),n:!!x.n});
+  if(!(S.font in FONTS))S.font=DEF.font;
+  syncUI();upd();loadFont();
+ }catch(err){alert('Fitxer no vàlid.')}
+};
 $('#print').onclick=()=>window.print();
 
 function scale(){$('#wrap').style.zoom=Math.min(1,($('#stage').clientWidth-24)/794)}
