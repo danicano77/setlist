@@ -39,7 +39,7 @@ button:hover{filter:brightness(.95)}
 #sList{list-style:none;margin:0;padding:0;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:space-evenly}
 #sList li{display:flex;gap:.35em;align-items:baseline;font-size:var(--fs);line-height:1.08;flex:none}
 #sList li b{color:var(--ac);font-weight:inherit;min-width:1.5em;text-align:right}
-#sList.up span{text-transform:uppercase}
+#sList.up li:not(.note) span{text-transform:uppercase}#sList li.note{font-size:calc(var(--fs)*.7);color:var(--nc);line-height:1.15}
 #sheet[data-al=center] #sList li{justify-content:center}
 #sheet[data-al=center] #sList li b{min-width:0}
 @media (max-width:860px){.app{grid-template-columns:1fr}.panel{max-height:none;border-right:0;border-bottom:1px solid var(--bd)}}
@@ -83,16 +83,16 @@ button:hover{filter:brightness(.95)}
     <label class="ck"><input type="checkbox" id="upper"> Majúscules</label>
     <label class="ck"><input type="checkbox" id="center"> Centrat</label>
    </div>
-   <label class="ck" style="margin-top:8px">Color <input type="color" id="accent"></label>
+   <div class="row" style="margin-top:8px;gap:16px"><label class="ck">Color <input type="color" id="accent"></label><label class="ck">Color notes <input type="color" id="noteColor"></label></div>
   </section>
   <section>
    <h2>Cançons</h2>
    <div class="row">
     <input type="text" id="add" placeholder="Títol i Enter per afegir…" autocomplete="off">
-    <button id="addBtn">+</button>
+    <button id="addBtn" title="Afegeix cançó">+</button><button id="noteBtn" title="Afegeix nota (Maj+Enter)">+ Nota</button>
    </div>
    <ul id="list"></ul>
-   <p style="color:var(--mu);font-size:12px;margin:8px 0 0">Reordena arrossegant ⠿, amb ▲▼ o amb Alt+↑/↓ dins el títol. Pots enganxar una llista (una cançó per línia).</p>
+   <p style="color:var(--mu);font-size:12px;margin:8px 0 0">Reordena arrossegant ⠿, amb ▲▼ o amb Alt+↑/↓ dins el títol. Pots enganxar una llista (una cançó per línia). "+ Nota" o Maj+Enter afegeix una nota (sense número, en gris); ✎ converteix cançó↔nota.</p>
    <button id="clear" style="margin-top:8px">Esborrar tot</button>
   </section>
  </aside>
@@ -108,15 +108,16 @@ button:hover{filter:brightness(.95)}
 <script>
 const $=s=>document.querySelector(s);
 const FONTS={'Bebas Neue':400,'Anton':400,'Oswald':700,'Archivo Black':400,'Montserrat':800,'Playfair Display':800,'Permanent Marker':400,'Rock Salt':400,'Special Elite':400};
-const DEF={band:'NOM DE LA BANDA',date:'',venue:'',songs:['Obertura','Segona cançó','La lenta','El gran èxit','Bis final'],font:'Bebas Neue',size:64,bandSize:96,metaSize:36,auto:true,nums:true,upper:true,center:false,accent:'#e11d48'};
+const DEF={band:'NOM DE LA BANDA',date:'',venue:'',songs:['Obertura','Segona cançó','La lenta','El gran èxit','Bis final'],font:'Bebas Neue',size:64,bandSize:96,metaSize:36,noteColor:'#666666',auto:true,nums:true,upper:true,center:false,accent:'#e11d48'};
 let S;
 try{S={...DEF,...JSON.parse(localStorage.getItem('setlist')||'{}')}}catch(e){S={...DEF}}
+S.songs=S.songs.map(x=>typeof x==='string'?{t:x,n:false}:x);
 const save=()=>{try{localStorage.setItem('setlist',JSON.stringify(S))}catch(e){}};
 const sheet=$('#sheet'),sList=$('#sList'),list=$('#list');
 let drag=null;
 
 $('#font').innerHTML=Object.keys(FONTS).map(f=>`<option>${f}</option>`).join('');
-for(const k of ['band','date','venue','font','accent']){const el=$('#'+k);el.value=S[k];el.oninput=()=>{S[k]=el.value;save();if(k==='font')loadFont();else drawSheet()}}
+for(const k of ['band','date','venue','font','accent','noteColor']){const el=$('#'+k);el.value=S[k];el.oninput=()=>{S[k]=el.value;save();if(k==='font')loadFont();else drawSheet()}}
 for(const k of ['auto','nums','upper','center']){const el=$('#'+k);el.checked=S[k];el.onchange=()=>{S[k]=el.checked;save();drawSheet()}}
 $('#bandSize').value=S.bandSize;$('#bandVal').textContent=S.bandSize;$('#bandSize').oninput=e=>{S.bandSize=+e.target.value;$('#bandVal').textContent=S.bandSize;save();drawSheet()};
 $('#metaSize').value=S.metaSize;$('#metaVal').textContent=S.metaSize;$('#metaSize').oninput=e=>{S.metaSize=+e.target.value;$('#metaVal').textContent=S.metaSize;save();drawSheet()};
@@ -131,7 +132,7 @@ function fit(){
  $('#size').disabled=S.auto;$('#size').style.opacity=S.auto?.4:1;
 }
 function drawSheet(){
- sheet.style.setProperty('--ac',S.accent);sheet.style.setProperty('--bs',S.bandSize+'px');sheet.style.setProperty('--ms',S.metaSize+'px');
+ sheet.style.setProperty('--ac',S.accent);sheet.style.setProperty('--bs',S.bandSize+'px');sheet.style.setProperty('--ms',S.metaSize+'px');sheet.style.setProperty('--nc',S.noteColor);
  sheet.style.fontFamily=`'${S.font}',Impact,'Arial Narrow',sans-serif`;
  sheet.style.fontWeight=FONTS[S.font]||400;
  sheet.dataset.al=S.center?'center':'left';
@@ -139,11 +140,11 @@ function drawSheet(){
  const d=S.date?S.date.split('-').reverse().join('/'):'';
  $('#sMeta').replaceChildren(...[d,S.venue].filter(Boolean).map(t=>{const s=document.createElement('span');s.textContent=t;return s}));
  sList.className=S.upper?'up':'';
- sList.innerHTML='';
+ sList.innerHTML='';let cnt=0;
  S.songs.forEach((t,i)=>{
   const li=document.createElement('li');
-  if(S.nums){const b=document.createElement('b');b.textContent=String(i+1).padStart(2,'0');li.appendChild(b)}
-  const s=document.createElement('span');s.textContent=t;li.appendChild(s);sList.appendChild(li);
+  if(t.n)li.className='note';else{cnt++;if(S.nums){const b=document.createElement('b');b.textContent=String(cnt).padStart(2,'0');li.appendChild(b)}}
+  const s=document.createElement('span');s.textContent=t.t;li.appendChild(s);sList.appendChild(li);
  });
  fit();
 }
@@ -156,18 +157,18 @@ function mv(a,b,focus){
 }
 function upd(){save();drawList();drawSheet()}
 function drawList(){
- list.innerHTML='';
+ list.innerHTML='';let cnt=0;
  S.songs.forEach((t,i)=>{
   const li=document.createElement('li');
-  li.innerHTML='<i class="h" title="Arrossega">⠿</i><em>'+(i+1)+'</em><input type="text"><button data-a="u">▲</button><button data-a="d">▼</button><button data-a="x">✕</button>';
-  const inp=li.querySelector('input');inp.value=t;
-  inp.oninput=()=>{S.songs[i]=inp.value;save();drawSheet()};
+  li.innerHTML='<i class="h" title="Arrossega">⠿</i><em>'+(t.n?'✎':++cnt)+'</em><input type="text"><button data-a="t" title="Canvia cançó/nota">✎</button><button data-a="u">▲</button><button data-a="d">▼</button><button data-a="x">✕</button>';
+  const inp=li.querySelector('input');inp.value=t.t;if(t.n)inp.style.color='var(--mu)';
+  inp.oninput=()=>{S.songs[i].t=inp.value;save();drawSheet()};
   inp.onkeydown=e=>{
    if(e.altKey&&e.key==='ArrowUp'){e.preventDefault();mv(i,i-1,true)}
    if(e.altKey&&e.key==='ArrowDown'){e.preventDefault();mv(i,i+1,true)}
   };
   li.onclick=e=>{const a=e.target.dataset.a;
-   if(a==='u')mv(i,i-1);else if(a==='d')mv(i,i+1);else if(a==='x'){S.songs.splice(i,1);upd()}};
+   if(a==='u')mv(i,i-1);else if(a==='d')mv(i,i+1);else if(a==='t'){t.n=!t.n;upd()}else if(a==='x'){S.songs.splice(i,1);upd()}};
   li.querySelector('.h').onmousedown=()=>li.draggable=true;
   li.ondragstart=e=>{drag=i;li.classList.add('dr');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',i)};
   li.ondragend=()=>{li.draggable=false;li.classList.remove('dr')};
@@ -179,15 +180,15 @@ function drawList(){
 }
 
 const addEl=$('#add');
-function addSongs(){
+function addSongs(note){
  const items=addEl.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
  if(!items.length)return;
- S.songs.push(...items);addEl.value='';upd();addEl.focus();
+ S.songs.push(...items.map(t=>({t,n:!!note})));addEl.value='';upd();addEl.focus();
  list.lastElementChild&&list.lastElementChild.scrollIntoView({block:'nearest'});
 }
-addEl.onkeydown=e=>{if(e.key==='Enter')addSongs()};
+addEl.onkeydown=e=>{if(e.key==='Enter')addSongs(e.shiftKey)};
 addEl.onpaste=()=>setTimeout(()=>{if(/\n/.test(addEl.value))addSongs()},0);
-$('#addBtn').onclick=addSongs;
+$('#addBtn').onclick=()=>addSongs();$('#noteBtn').onclick=()=>addSongs(true);
 $('#clear').onclick=()=>{if(S.songs.length&&confirm('Esborrar totes les cançons?')){S.songs=[];upd()}};
 $('#print').onclick=()=>window.print();
 
