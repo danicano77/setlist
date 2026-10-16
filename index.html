@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Setlist</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Montserrat:wght@800&family=Oswald:wght@700&family=Permanent+Marker&family=Playfair+Display:wght@800&family=Rock+Salt&family=Special+Elite&display=swap">
+<style>
+:root{--bg:#f1f1f4;--pn:#fff;--tx:#18181b;--mu:#71717a;--bd:#e4e4e7;--in:#f4f4f5;--ac:#e11d48;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e0e11;--pn:#18181c;--tx:#f4f4f5;--mu:#a1a1aa;--bd:#2c2c33;--in:#232329}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.app{display:grid;grid-template-columns:400px 1fr;min-height:100vh}
+.panel{background:var(--pn);border-right:1px solid var(--bd);padding:16px;display:flex;flex-direction:column;gap:14px;max-height:100vh;overflow:auto}
+h2{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin:0 0 6px}
+input,select,button{font:inherit;color:inherit}
+input[type=text],input[type=date],select{width:100%;padding:8px 10px;background:var(--in);border:1px solid var(--bd);border-radius:8px}
+.row{display:flex;gap:8px;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+label.ck{display:flex;gap:6px;align-items:center;font-size:13px}
+button{cursor:pointer;background:var(--in);border:1px solid var(--bd);border-radius:8px;padding:7px 10px}
+button.pr{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600;padding:10px;flex:1}
+button:hover{filter:brightness(.95)}
+#list{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
+#list li{display:flex;gap:5px;align-items:center;padding:4px;border:1px solid var(--bd);border-radius:9px;background:var(--in)}
+#list li.ov{border-color:var(--ac);box-shadow:0 -2px 0 var(--ac)}
+#list li.dr{opacity:.4}
+#list em{font-style:normal;color:var(--mu);width:20px;text-align:right;font-size:12px}
+#list input{flex:1;min-width:0;border:0;background:transparent;padding:6px;outline:none}
+#list .h{cursor:grab;color:var(--mu);padding:0 4px;font-style:normal;user-select:none}
+#list button{padding:4px 7px;font-size:11px}
+.stage{padding:20px 12px;overflow:auto;display:flex;justify-content:center;align-items:flex-start}
+#sheet{width:210mm;height:296.5mm;background:#fff;color:#111;padding:15mm 14mm 12mm;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.25);flex:none}
+#sheet header{flex:none;text-align:center;border-bottom:3px solid var(--ac);padding-bottom:5mm;margin-bottom:5mm}
+#sBand{margin:0;font-weight:inherit;text-transform:uppercase;letter-spacing:.03em;line-height:1;font-size:min(calc(var(--fs)*1.5),112px)}
+#sMeta{margin:3mm 0 0;font-size:max(18px,calc(var(--fs)*.45));letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:center;flex-wrap:wrap;gap:.8em}#sMeta span+span:before{content:"·";color:var(--ac);margin-right:.8em}
+#sMeta:empty{display:none}
+#sList{list-style:none;margin:0;padding:0;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:space-evenly}
+#sList li{display:flex;gap:.35em;align-items:baseline;font-size:var(--fs);line-height:1.08;flex:none}
+#sList li b{color:var(--ac);font-weight:inherit;min-width:1.5em;text-align:right}
+#sList.up span{text-transform:uppercase}
+#sheet[data-al=center] #sList li{justify-content:center}
+#sheet[data-al=center] #sList li b{min-width:0}
+@media (max-width:860px){.app{grid-template-columns:1fr}.panel{max-height:none;border-right:0;border-bottom:1px solid var(--bd)}}
+@page{size:A4;margin:0}
+@media print{
+ html,body{background:#fff}
+ .panel{display:none!important}
+ .app{display:block}
+ .stage{padding:0;display:block;overflow:visible}
+ #wrap{zoom:1!important}
+ #sheet{box-shadow:none;margin:0}
+}
+</style>
+</head>
+<body>
+<div class="app">
+ <aside class="panel">
+  <div class="row">
+   <button class="pr" id="print">🖨 Imprimir / Exportar PDF</button>
+  </div>
+  <section>
+   <h2>Concert</h2>
+   <input type="text" id="band" placeholder="Nom de la banda" style="margin-bottom:8px">
+   <div class="grid2">
+    <input type="date" id="date">
+    <input type="text" id="venue" placeholder="Lloc">
+   </div>
+  </section>
+  <section>
+   <h2>Estil</h2>
+   <select id="font" style="margin-bottom:8px"></select>
+   <div class="row" style="margin-bottom:8px">
+    <input type="range" id="size" min="18" max="130" style="flex:1">
+    <span id="sizeVal" style="width:34px;text-align:right;color:var(--mu)"></span>
+   </div>
+   <div class="grid2">
+    <label class="ck"><input type="checkbox" id="auto"> Mida automàtica</label>
+    <label class="ck"><input type="checkbox" id="nums"> Numeració</label>
+    <label class="ck"><input type="checkbox" id="upper"> Majúscules</label>
+    <label class="ck"><input type="checkbox" id="center"> Centrat</label>
+   </div>
+   <label class="ck" style="margin-top:8px">Color <input type="color" id="accent"></label>
+  </section>
+  <section>
+   <h2>Cançons</h2>
+   <div class="row">
+    <input type="text" id="add" placeholder="Títol i Enter per afegir…" autocomplete="off">
+    <button id="addBtn">+</button>
+   </div>
+   <ul id="list"></ul>
+   <p style="color:var(--mu);font-size:12px;margin:8px 0 0">Reordena arrossegant ⠿, amb ▲▼ o amb Alt+↑/↓ dins el títol. Pots enganxar una llista (una cançó per línia).</p>
+   <button id="clear" style="margin-top:8px">Esborrar tot</button>
+  </section>
+ </aside>
+ <main class="stage" id="stage">
+  <div id="wrap">
+   <div id="sheet">
+    <header><h1 id="sBand"></h1><p id="sMeta"></p></header>
+    <ol id="sList"></ol>
+   </div>
+  </div>
+ </main>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const FONTS={'Bebas Neue':400,'Anton':400,'Oswald':700,'Archivo Black':400,'Montserrat':800,'Playfair Display':800,'Permanent Marker':400,'Rock Salt':400,'Special Elite':400};
+const DEF={band:'NOM DE LA BANDA',date:'',venue:'',songs:['Obertura','Segona cançó','La lenta','El gran èxit','Bis final'],font:'Bebas Neue',size:64,auto:true,nums:true,upper:true,center:false,accent:'#e11d48'};
+let S;
+try{S={...DEF,...JSON.parse(localStorage.getItem('setlist')||'{}')}}catch(e){S={...DEF}}
+const save=()=>{try{localStorage.setItem('setlist',JSON.stringify(S))}catch(e){}};
+const sheet=$('#sheet'),sList=$('#sList'),list=$('#list');
+let drag=null;
+
+$('#font').innerHTML=Object.keys(FONTS).map(f=>`<option>${f}</option>`).join('');
+for(const k of ['band','date','venue','font','accent']){const el=$('#'+k);el.value=S[k];el.oninput=()=>{S[k]=el.value;save();if(k==='font')loadFont();else drawSheet()}}
+for(const k of ['auto','nums','upper','center']){const el=$('#'+k);el.checked=S[k];el.onchange=()=>{S[k]=el.checked;save();drawSheet()}}
+$('#size').value=S.size;$('#size').oninput=e=>{S.size=+e.target.value;save();drawSheet()};
+
+function fit(){
+ const set=v=>sheet.style.setProperty('--fs',v+'px');
+ let fs=S.size;
+ if(S.auto){let lo=16,hi=130;for(let i=0;i<10;i++){const m=(lo+hi)/2;set(m);if(sList.scrollHeight>sList.clientHeight+1)hi=m;else lo=m}fs=lo}
+ set(fs);
+ $('#sizeVal').textContent=Math.round(fs);
+ $('#size').disabled=S.auto;$('#size').style.opacity=S.auto?.4:1;
+}
+function drawSheet(){
+ sheet.style.setProperty('--ac',S.accent);
+ sheet.style.fontFamily=`'${S.font}',Impact,'Arial Narrow',sans-serif`;
+ sheet.style.fontWeight=FONTS[S.font]||400;
+ sheet.dataset.al=S.center?'center':'left';
+ $('#sBand').textContent=S.band||'\u00a0';
+ const d=S.date?new Date(S.date+'T12:00').toLocaleDateString('ca',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
+ $('#sMeta').replaceChildren(...[d,S.venue].filter(Boolean).map(t=>{const s=document.createElement('span');s.textContent=t;return s}));
+ sList.className=S.upper?'up':'';
+ sList.innerHTML='';
+ S.songs.forEach((t,i)=>{
+  const li=document.createElement('li');
+  if(S.nums){const b=document.createElement('b');b.textContent=String(i+1).padStart(2,'0');li.appendChild(b)}
+  const s=document.createElement('span');s.textContent=t;li.appendChild(s);sList.appendChild(li);
+ });
+ fit();
+}
+function loadFont(){document.fonts.load(`40px '${S.font}'`).finally(drawSheet);drawSheet()}
+
+function mv(a,b,focus){
+ if(a==null||b<0||b>=S.songs.length||a===b)return;
+ const [x]=S.songs.splice(a,1);S.songs.splice(b,0,x);upd();
+ if(focus)list.children[b].querySelector('input').focus();
+}
+function upd(){save();drawList();drawSheet()}
+function drawList(){
+ list.innerHTML='';
+ S.songs.forEach((t,i)=>{
+  const li=document.createElement('li');
+  li.innerHTML='<i class="h" title="Arrossega">⠿</i><em>'+(i+1)+'</em><input type="text"><button data-a="u">▲</button><button data-a="d">▼</button><button data-a="x">✕</button>';
+  const inp=li.querySelector('input');inp.value=t;
+  inp.oninput=()=>{S.songs[i]=inp.value;save();drawSheet()};
+  inp.onkeydown=e=>{
+   if(e.altKey&&e.key==='ArrowUp'){e.preventDefault();mv(i,i-1,true)}
+   if(e.altKey&&e.key==='ArrowDown'){e.preventDefault();mv(i,i+1,true)}
+  };
+  li.onclick=e=>{const a=e.target.dataset.a;
+   if(a==='u')mv(i,i-1);else if(a==='d')mv(i,i+1);else if(a==='x'){S.songs.splice(i,1);upd()}};
+  li.querySelector('.h').onmousedown=()=>li.draggable=true;
+  li.ondragstart=e=>{drag=i;li.classList.add('dr');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',i)};
+  li.ondragend=()=>{li.draggable=false;li.classList.remove('dr')};
+  li.ondragover=e=>{e.preventDefault();li.classList.add('ov')};
+  li.ondragleave=()=>li.classList.remove('ov');
+  li.ondrop=e=>{e.preventDefault();li.classList.remove('ov');mv(drag,i);drag=null};
+  list.appendChild(li);
+ });
+}
+
+const addEl=$('#add');
+function addSongs(){
+ const items=addEl.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+ if(!items.length)return;
+ S.songs.push(...items);addEl.value='';upd();addEl.focus();
+ list.lastElementChild&&list.lastElementChild.scrollIntoView({block:'nearest'});
+}
+addEl.onkeydown=e=>{if(e.key==='Enter')addSongs()};
+addEl.onpaste=()=>setTimeout(()=>{if(/\n/.test(addEl.value))addSongs()},0);
+$('#addBtn').onclick=addSongs;
+$('#clear').onclick=()=>{if(S.songs.length&&confirm('Esborrar totes les cançons?')){S.songs=[];upd()}};
+$('#print').onclick=()=>window.print();
+
+function scale(){$('#wrap').style.zoom=Math.min(1,($('#stage').clientWidth-24)/794)}
+addEventListener('resize',scale);
+scale();drawList();loadFont();
+document.fonts.ready.then(drawSheet);
+</script>
+</body>
+</html>
