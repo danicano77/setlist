@@ -33,7 +33,7 @@ button:hover{filter:brightness(.95)}
 .stage{padding:20px 12px;overflow:auto;display:flex;justify-content:center;align-items:flex-start}
 #sheet{width:210mm;height:296.5mm;background:#fff;color:#111;padding:15mm 14mm 12mm;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.25);flex:none}
 #sheet header{flex:none;text-align:center;border-bottom:3px solid var(--ac);padding-bottom:5mm;margin-bottom:5mm}
-#sBand{margin:0;font-weight:inherit;text-transform:uppercase;letter-spacing:.03em;line-height:1;font-size:min(calc(var(--fs)*1.5),112px)}
+#sBand{margin:0;font-weight:inherit;text-transform:uppercase;letter-spacing:.03em;line-height:1;font-size:var(--bs)}
 #sMeta{margin:3mm 0 0;font-size:max(18px,calc(var(--fs)*.45));letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:center;flex-wrap:wrap;gap:.8em}#sMeta span+span:before{content:"·";color:var(--ac);margin-right:.8em}
 #sMeta:empty{display:none}
 #sList{list-style:none;margin:0;padding:0;flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:space-evenly}
@@ -71,8 +71,9 @@ button:hover{filter:brightness(.95)}
   <section>
    <h2>Estil</h2>
    <select id="font" style="margin-bottom:8px"></select>
+   <div class="row" style="margin-bottom:8px"><span style="color:var(--mu);width:62px;font-size:12px">Banda</span><input type="range" id="bandSize" min="20" max="200" style="flex:1"><span id="bandVal" style="width:34px;text-align:right;color:var(--mu)"></span></div>
    <div class="row" style="margin-bottom:8px">
-    <input type="range" id="size" min="18" max="130" style="flex:1">
+    <span style="color:var(--mu);width:62px;font-size:12px">Cançons</span><input type="range" id="size" min="18" max="130" style="flex:1">
     <span id="sizeVal" style="width:34px;text-align:right;color:var(--mu)"></span>
    </div>
    <div class="grid2">
@@ -106,7 +107,7 @@ button:hover{filter:brightness(.95)}
 <script>
 const $=s=>document.querySelector(s);
 const FONTS={'Bebas Neue':400,'Anton':400,'Oswald':700,'Archivo Black':400,'Montserrat':800,'Playfair Display':800,'Permanent Marker':400,'Rock Salt':400,'Special Elite':400};
-const DEF={band:'NOM DE LA BANDA',date:'',venue:'',songs:['Obertura','Segona cançó','La lenta','El gran èxit','Bis final'],font:'Bebas Neue',size:64,auto:true,nums:true,upper:true,center:false,accent:'#e11d48'};
+const DEF={band:'NOM DE LA BANDA',date:'',venue:'',songs:['Obertura','Segona cançó','La lenta','El gran èxit','Bis final'],font:'Bebas Neue',size:64,bandSize:96,auto:true,nums:true,upper:true,center:false,accent:'#e11d48'};
 let S;
 try{S={...DEF,...JSON.parse(localStorage.getItem('setlist')||'{}')}}catch(e){S={...DEF}}
 const save=()=>{try{localStorage.setItem('setlist',JSON.stringify(S))}catch(e){}};
@@ -116,6 +117,7 @@ let drag=null;
 $('#font').innerHTML=Object.keys(FONTS).map(f=>`<option>${f}</option>`).join('');
 for(const k of ['band','date','venue','font','accent']){const el=$('#'+k);el.value=S[k];el.oninput=()=>{S[k]=el.value;save();if(k==='font')loadFont();else drawSheet()}}
 for(const k of ['auto','nums','upper','center']){const el=$('#'+k);el.checked=S[k];el.onchange=()=>{S[k]=el.checked;save();drawSheet()}}
+$('#bandSize').value=S.bandSize;$('#bandVal').textContent=S.bandSize;$('#bandSize').oninput=e=>{S.bandSize=+e.target.value;$('#bandVal').textContent=S.bandSize;save();drawSheet()};
 $('#size').value=S.size;$('#size').oninput=e=>{S.size=+e.target.value;save();drawSheet()};
 
 function fit(){
@@ -127,7 +129,7 @@ function fit(){
  $('#size').disabled=S.auto;$('#size').style.opacity=S.auto?.4:1;
 }
 function drawSheet(){
- sheet.style.setProperty('--ac',S.accent);
+ sheet.style.setProperty('--ac',S.accent);sheet.style.setProperty('--bs',S.bandSize+'px');
  sheet.style.fontFamily=`'${S.font}',Impact,'Arial Narrow',sans-serif`;
  sheet.style.fontWeight=FONTS[S.font]||400;
  sheet.dataset.al=S.center?'center':'left';
