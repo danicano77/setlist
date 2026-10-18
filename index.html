@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Setlist</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#e11d48">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Setlist">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Montserrat:wght@800&family=Oswald:wght@700&family=Permanent+Marker&family=Playfair+Display:wght@800&family=Rock+Salt&family=Special+Elite&display=swap">
 <style>
 :root{--bg:#f1f1f4;--pn:#fff;--tx:#18181b;--mu:#71717a;--bd:#e4e4e7;--in:#f4f4f5;--ac:#e11d48;
@@ -215,7 +221,7 @@ $('#saveBtn').onclick=async()=>{
  const data=JSON.stringify({app:'setlist',...S},null,1);
  const name=((S.band||'setlist').replace(/[^\p{L}\p{N}]+/gu,'-').replace(/^-|-$/g,'').toLowerCase()||'setlist')+'-setlist.json';
  try{const dl=await claude.use('downloads');if(!dl)throw 0;await dl.save({filename:name,data})}
- catch(e){if(e&&e.code==='declined')return;try{await navigator.clipboard.writeText(data);alert('No es pot desar el fitxer aquí. He copiat el JSON al porta-retalls.')}catch(_){prompt('Copia aquest JSON:',data)}}
+ catch(e){if(e&&e.code==='declined')return;try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove();return}catch(_){}try{await navigator.clipboard.writeText(data);alert('No es pot desar el fitxer aquí. He copiat el JSON al porta-retalls.')}catch(_){prompt('Copia aquest JSON:',data)}}
 };
 $('#loadBtn').onclick=()=>$('#file').click();
 $('#file').onchange=async e=>{
@@ -234,6 +240,7 @@ function scale(){$('#wrap').style.zoom=Math.min(1,($('#stage').clientWidth-24)/7
 addEventListener('resize',scale);
 scale();drawList();loadFont();
 document.fonts.ready.then(drawSheet);
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
 </body>
 </html>
